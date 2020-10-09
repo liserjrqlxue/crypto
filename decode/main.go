@@ -26,6 +26,10 @@ var (
 
 func main() {
 	flag.Parse()
+	if *input == "" {
+		flag.Usage()
+		panic("-input is required!")
+	}
 	if *output == "" {
 		*output = *input + ".decode"
 	}
