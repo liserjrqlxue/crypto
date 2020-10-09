@@ -3,8 +3,10 @@ package AES
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"fmt"
 	"io/ioutil"
 
+	"github.com/liserjrqlxue/goUtil/osUtil"
 	"github.com/liserjrqlxue/goUtil/simpleUtil"
 )
 
@@ -49,4 +51,56 @@ func EncodeFile(fileName string, codeKey []byte) []byte {
 			codeKey,
 		),
 	).([]byte)
+}
+
+func Decode2File(fileName string, data, codeKey []byte) {
+	var file = osUtil.Create(fileName)
+	defer simpleUtil.DeferClose(file)
+	var c = simpleUtil.HandleError(
+		file.Write(
+			simpleUtil.HandleError(Decode(data, codeKey)).([]byte),
+		),
+	)
+	fmt.Printf("write %d byte to %s\n", c, fileName)
+}
+
+func Encode2File(fileName string, data, codeKey []byte) {
+	var file = osUtil.Create(fileName)
+	defer simpleUtil.DeferClose(file)
+	var c = simpleUtil.HandleError(
+		file.Write(
+			simpleUtil.HandleError(Encode(data, codeKey)).([]byte),
+		),
+	)
+	fmt.Printf("write %d byte to %s\n", c, fileName)
+}
+
+func DecodeFile2File(input, output string, codeKey []byte) {
+	var f = osUtil.Create(output)
+	defer simpleUtil.DeferClose(f)
+	var c = simpleUtil.HandleError(
+		f.Write(
+			simpleUtil.HandleError(
+				Decode(
+					simpleUtil.HandleError(ioutil.ReadFile(input)).([]byte),
+					codeKey,
+				)).([]byte),
+		),
+	)
+	fmt.Printf("write %d byte to %s\n", c, output)
+}
+
+func EncodeFile2File(input, output string, codeKey []byte) {
+	var f = osUtil.Create(output)
+	defer simpleUtil.DeferClose(f)
+	var c = simpleUtil.HandleError(
+		f.Write(
+			simpleUtil.HandleError(
+				Encode(
+					simpleUtil.HandleError(ioutil.ReadFile(input)).([]byte),
+					codeKey,
+				)).([]byte),
+		),
+	)
+	fmt.Printf("write %d byte to %s\n", c, output)
 }
