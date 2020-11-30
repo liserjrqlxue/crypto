@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
@@ -69,6 +70,11 @@ var (
 		"c3d112d6a47a0a04aad2b9d2d2cad266",
 		"codeKey for aes",
 	)
+	skipWarn = flag.String(
+		"skipWarn",
+		"",
+		"skip warn of columns index (0-based), comma as sep",
+	)
 )
 
 func main() {
@@ -89,6 +95,15 @@ func main() {
 			case "txt":
 				*suffix = ".txt.aes"
 			}
+		}
+	}
+
+	var skip = make(map[int]bool)
+	if *skipWarn != "" {
+		for _, index := range strings.Split(*skipWarn, ",") {
+			var i, err = strconv.Atoi(index)
+			simpleUtil.CheckErr(err, "can not parse "+*skipWarn)
+			skip[i] = true
 		}
 	}
 	var codeKeyBytes = []byte(*codeKey)
@@ -116,7 +131,7 @@ func main() {
 					d = simpleUtil.HandleError(json.MarshalIndent(data, "", "  ")).([]byte)
 					fmt.Println("keys:\t%d\n", len(data))
 				} else {
-					var data, _ = simpleUtil.Slice2MapMapArrayMerge(rows, *key, *mergeSep)
+					var data, _ = simpleUtil.Slice2MapMapArrayMerge1(rows, *key, *mergeSep, skip)
 					d = simpleUtil.HandleError(json.MarshalIndent(data, "", "  ")).([]byte)
 					fmt.Printf("keys:\t%d\n", len(data))
 				}
@@ -138,7 +153,7 @@ func main() {
 				var data, _ = textUtil.File2MapArray(*input, *txtSep, nil)
 				d = simpleUtil.HandleError(json.MarshalIndent(data, "", "  ")).([]byte)
 			} else {
-				var data, _ = simpleUtil.Slice2MapMapArrayMerge(textUtil.File2Slice(*input, *txtSep), *key, *mergeSep)
+				var data, _ = simpleUtil.Slice2MapMapArrayMerge1(textUtil.File2Slice(*input, *txtSep), *key, *mergeSep, skip)
 				d = simpleUtil.HandleError(json.MarshalIndent(data, "", "  ")).([]byte)
 			}
 			AES.Encode2File(outputFile, d, codeKeyBytes)
