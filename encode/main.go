@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
@@ -73,7 +75,8 @@ func main() {
 	flag.Parse()
 	if *input == "" {
 		flag.Usage()
-		panic("-input is required!")
+		fmt.Println("-input is required!")
+		os.Exit(1)
 	}
 	if *output == "" {
 		if *prefix == "" {
@@ -82,9 +85,9 @@ func main() {
 		if *suffix == "" {
 			switch *outputType {
 			case "json":
-				*suffix = ".json"
+				*suffix = ".json.aes"
 			case "txt":
-				*suffix = ".txt"
+				*suffix = ".txt.aes"
 			}
 		}
 	}
@@ -92,22 +95,30 @@ func main() {
 
 	switch *inputType {
 	case "xlsx":
-		var inputFh = simpleUtil.HandleError(excelize.OpenFile(*input)).(*excelize.File)
-		for sheet := range inputFh.Sheet {
+		var inputFh, err = excelize.OpenFile(*input)
+		simpleUtil.CheckErr(err)
+		//var inputFh = simpleUtil.HandleError(excelize.OpenFile(*input)).(*excelize.File)
+		//fmt.Printf("%+v\n",inputFh.GetSheetMap())
+		for _, sheet := range inputFh.GetSheetMap() {
 			if *sheetName != "" && *sheetName != sheet {
+				fmt.Printf("skip sheet:[%s]\n", sheet)
 				continue
 			}
+			fmt.Printf("encode sheet:[%s]\n", *sheetName)
 			var rows = simpleUtil.HandleError(inputFh.GetRows(sheet)).([][]string)
+			fmt.Printf("rows:\t%d\n", len(rows))
 			var outputFile = *prefix + *output + "." + sheet + *suffix
 			switch *outputType {
 			case "json":
 				var d []byte
 				if *key == "" {
 					var data, _ = simpleUtil.Slice2MapArray(rows)
-					d = simpleUtil.HandleError(json.MarshalIndent(data, "", "")).([]byte)
+					d = simpleUtil.HandleError(json.MarshalIndent(data, "", "  ")).([]byte)
+					fmt.Println("keys:\t%d\n", len(data))
 				} else {
 					var data, _ = simpleUtil.Slice2MapMapArrayMerge(rows, *key, *mergeSep)
-					d = simpleUtil.HandleError(json.MarshalIndent(data, "", "")).([]byte)
+					d = simpleUtil.HandleError(json.MarshalIndent(data, "", "  ")).([]byte)
+					fmt.Printf("keys:\t%d\n", len(data))
 				}
 				AES.Encode2File(outputFile, d, codeKeyBytes)
 			case "txt":
@@ -125,10 +136,10 @@ func main() {
 			var d []byte
 			if *key == "" {
 				var data, _ = textUtil.File2MapArray(*input, *txtSep, nil)
-				d = simpleUtil.HandleError(json.MarshalIndent(data, "", "")).([]byte)
+				d = simpleUtil.HandleError(json.MarshalIndent(data, "", "  ")).([]byte)
 			} else {
 				var data, _ = simpleUtil.Slice2MapMapArrayMerge(textUtil.File2Slice(*input, *txtSep), *key, *mergeSep)
-				d = simpleUtil.HandleError(json.MarshalIndent(data, "", "")).([]byte)
+				d = simpleUtil.HandleError(json.MarshalIndent(data, "", "  ")).([]byte)
 			}
 			AES.Encode2File(outputFile, d, codeKeyBytes)
 		case "txt":
