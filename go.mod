@@ -3,7 +3,7 @@ module github.com/liserjrqlxue/crypto
 go 1.18
 
 require (
-	github.com/liserjrqlxue/goUtil v0.1.4
+	github.com/liserjrqlxue/goUtil v0.1.5
 	github.com/xuri/excelize/v2 v2.8.0
 )
 
