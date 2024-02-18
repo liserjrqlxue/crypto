@@ -4,7 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/liserjrqlxue/goUtil/osUtil"
 	"github.com/liserjrqlxue/goUtil/simpleUtil"
@@ -35,30 +35,33 @@ func Decode(inputData []byte, codeKey []byte) ([]byte, error) {
 	return outputData, e
 }
 
+// DecodeFile decode file to []byte
 func DecodeFile(fileName string, codeKey []byte) []byte {
 	return simpleUtil.HandleError(
 		Decode(
-			simpleUtil.HandleError(ioutil.ReadFile(fileName)).([]byte),
+			simpleUtil.HandleError(os.ReadFile(fileName)),
 			codeKey,
 		),
-	).([]byte)
+	)
 }
 
+// EncodeFile encode file to []byte
 func EncodeFile(fileName string, codeKey []byte) []byte {
 	return simpleUtil.HandleError(
 		Encode(
-			simpleUtil.HandleError(ioutil.ReadFile(fileName)).([]byte),
+			simpleUtil.HandleError(os.ReadFile(fileName)),
 			codeKey,
 		),
-	).([]byte)
+	)
 }
 
+// Decode2File decode []byte to file
 func Decode2File(fileName string, data, codeKey []byte) {
 	var file = osUtil.Create(fileName)
 	defer simpleUtil.DeferClose(file)
 	var c = simpleUtil.HandleError(
 		file.Write(
-			simpleUtil.HandleError(Decode(data, codeKey)).([]byte),
+			simpleUtil.HandleError(Decode(data, codeKey)),
 		),
 	)
 	fmt.Printf("write %d byte to %s\n", c, fileName)
@@ -69,7 +72,7 @@ func Encode2File(fileName string, data, codeKey []byte) {
 	defer simpleUtil.DeferClose(file)
 	var c = simpleUtil.HandleError(
 		file.Write(
-			simpleUtil.HandleError(Encode(data, codeKey)).([]byte),
+			simpleUtil.HandleError(Encode(data, codeKey)),
 		),
 	)
 	fmt.Printf("write %d byte to %s\n", c, fileName)
@@ -81,10 +84,8 @@ func DecodeFile2File(input, output string, codeKey []byte) {
 	var c = simpleUtil.HandleError(
 		f.Write(
 			simpleUtil.HandleError(
-				Decode(
-					simpleUtil.HandleError(ioutil.ReadFile(input)).([]byte),
-					codeKey,
-				)).([]byte),
+				Decode(simpleUtil.HandleError(os.ReadFile(input)), codeKey),
+			),
 		),
 	)
 	fmt.Printf("write %d byte to %s\n", c, output)
@@ -96,10 +97,8 @@ func EncodeFile2File(input, output string, codeKey []byte) {
 	var c = simpleUtil.HandleError(
 		f.Write(
 			simpleUtil.HandleError(
-				Encode(
-					simpleUtil.HandleError(ioutil.ReadFile(input)).([]byte),
-					codeKey,
-				)).([]byte),
+				Encode(simpleUtil.HandleError(os.ReadFile(input)), codeKey),
+			),
 		),
 	)
 	fmt.Printf("write %d byte to %s\n", c, output)
